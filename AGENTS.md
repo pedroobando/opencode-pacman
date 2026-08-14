@@ -30,7 +30,7 @@ Cada archivo se carga como script clásico (no módulos ES), por eso la comunica
 - **Loop**: `loop()` en `main.js` incrementa `frame`, llama `update(game)` y `draw(ctx, game, frame)` cada frame via `requestAnimationFrame`.
 - **Movimiento**: velocidades fraccionarias (`PACMAN_SPEED = 0.125`, `GHOST_SPEED = 0.1` celdas/frame) — los giros solo se aplican en celdas alineadas (`aligned()` en `game.js`).
 - **Túnel horizontal**: `TUNNEL_ROW = 14`, extremos siempre pasables; `wrapTunnel()` reposiciona al cruzar.
-- **Fantasmas**: `kind: 'hunter'` persigue por Manhattan, `kind: 'random'` elige al azar; ambos evitan el 180° salvo callejón sin salida.
+- **Fantasmas**: cuatro personalidades arcade (`blinky`, `pinky`, `inky`, `clyde`), cada una con su propio target de persecución. Spawnan en la pen y salen de forma escalonada usando `inPen` y `releaseDelay`; evitan el 180° salvo callejón sin salida.
 
 ## Convenciones del código
 
@@ -61,7 +61,7 @@ El repo usa dos skills en `.agents/skills/` activadas por comandos slash:
 
 **Estados válidos de spec:** `Draft`, `In review`, `Approved`, `Implemented`, `Obsolete` (o equivalentes en español consistentes con specs previas). Si hay specs existentes, matchear su idioma.
 
-Specs viven en `specs/` (carpeta aún no creada en este repo). Convenciones de naming: `NN-nombre-descriptivo.md`.
+Specs viven en `specs/`. Convenciones de naming: `NN-nombre-descriptivo.md`.
 
 ## Lo que NO hacer
 

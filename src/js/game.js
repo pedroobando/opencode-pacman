@@ -13,6 +13,19 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+const GHOST_RELEASE_INTERVAL = 180; // 3 s @ 60 fps
+const CLYDE_FLEE_DIST = 8;
+const PINKY_AHEAD = 4;
+const CLYDE_SCATTER = { x: 1, y: 29 };
+
+function shuffle( arr ) {
+  for ( let i = arr.length - 1; i > 0; i-- ) {
+    const j = Math.floor( Math.random() * ( i + 1 ) );
+    [ arr[ i ], arr[ j ] ] = [ arr[ j ], arr[ i ] ];
+  }
+  return arr;
+}
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -36,13 +49,19 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
-      x: g.x,
-      y: g.y,
-      dir: 'up',
-      speed: GHOST_SPEED,
-      kind: g.kind,
-    } ) ),
+    ghosts: ( () => {
+      const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
+      return GHOST_STARTS.map( ( g ) => ( {
+        x: g.x,
+        y: g.y,
+        dir: 'up',
+        speed: GHOST_SPEED,
+        kind: g.kind,
+        color: g.color,
+        inPen: true,
+        releaseDelay: g.kind === 'blinky' ? 0 : delays.pop(),
+      } ) );
+    } )(),
   };
 }
 
@@ -110,9 +129,125 @@ function movePacman( game ) {
   wrapTunnel( p, width );
 }
 
-function decideGhost( game, g ) {
-  const grid = game.grid;
+function decideBlinky( game, g, choices ) {
   const p = game.pacman;
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - px ) + Math.abs( ny - py );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
+function decidePinky( game, g, choices ) {
+  const p = game.pacman;
+  const grid = game.grid;
+  const d = DIRS[ p.dir ] || { x: 0, y: 0 };
+  let tx = Math.round( p.x ) + d.x * PINKY_AHEAD;
+  let ty = Math.round( p.y ) + d.y * PINKY_AHEAD;
+  tx = Math.max( 0, Math.min( grid[ 0 ].length - 1, tx ) );
+  ty = Math.max( 0, Math.min( grid.length - 1, ty ) );
+
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const dd = DIRS[ dir ];
+    const nx = g.x + dd.x;
+    const ny = g.y + dd.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
+function decideInky( game, g, choices ) {
+  const p = game.pacman;
+  const blinky = game.ghosts.find( ( ghost ) => ghost.kind === 'blinky' );
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+  const bx = blinky ? Math.round( blinky.x ) : px;
+  const by = blinky ? Math.round( blinky.y ) : py;
+  const tx = Math.round( px + 2 * ( px - bx ) );
+  const ty = Math.round( py + 2 * ( py - by ) );
+
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
+function decideClyde( game, g, choices ) {
+  const p = game.pacman;
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+  const gx = Math.round( g.x );
+  const gy = Math.round( g.y );
+  let tx, ty;
+  if ( Math.abs( px - gx ) + Math.abs( py - gy ) > CLYDE_FLEE_DIST ) {
+    tx = px;
+    ty = py;
+  } else {
+    tx = CLYDE_SCATTER.x;
+    ty = CLYDE_SCATTER.y;
+  }
+
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
+function headTowardDoor( g, choices ) {
+  const target = { x: 13, y: 12 };
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - target.x ) + Math.abs( ny - target.y );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
+function decideGhost( game, g ) {
+  if ( g.inPen ) return; // el modo pen se maneja directamente en moveGhost
+
+  const grid = game.grid;
 
   const options = Object.keys( DIRS ).filter(
     ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
@@ -120,22 +255,14 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'hunter' ) {
-    const px = Math.round( p.x );
-    const py = Math.round( p.y );
-    let best = choices[ 0 ];
-    let bestDist = Infinity;
-    for ( const dir of choices ) {
-      const d = DIRS[ dir ];
-      const nx = g.x + d.x;
-      const ny = g.y + d.y;
-      const dist = Math.abs( nx - px ) + Math.abs( ny - py );
-      if ( dist < bestDist ) {
-        bestDist = dist;
-        best = dir;
-      }
-    }
-    g.dir = best;
+  if ( g.kind === 'blinky' ) {
+    decideBlinky( game, g, choices );
+  } else if ( g.kind === 'pinky' ) {
+    decidePinky( game, g, choices );
+  } else if ( g.kind === 'inky' ) {
+    decideInky( game, g, choices );
+  } else if ( g.kind === 'clyde' ) {
+    decideClyde( game, g, choices );
   } else {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
@@ -145,16 +272,53 @@ function moveGhost( game, g ) {
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
+  if ( g.inPen && g.releaseDelay > 0 ) {
+    g.releaseDelay--;
+  }
+
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
     g.y = Math.round( g.y );
-    decideGhost( game, g );
+
+    if ( g.inPen ) {
+      // En la celda de la puerta, forzar salida hacia arriba.
+      if ( g.y === 12 && g.x >= 13 && g.x <= 14 ) {
+        g.dir = 'up';
+      } else {
+        const options = Object.keys( DIRS ).filter(
+          ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
+        );
+        const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
+
+        if ( g.releaseDelay > 0 ) {
+          // Mientras el timer no expire, no se permite cruzar la puerta.
+          const safeChoices = choices.filter( ( dir ) => {
+            const d = DIRS[ dir ];
+            const nx = Math.round( g.x + d.x );
+            const ny = Math.round( g.y + d.y );
+            return grid[ ny ][ nx ] !== 3;
+          } );
+          const pool = safeChoices.length ? safeChoices : choices;
+          g.dir = pool[ Math.floor( Math.random() * pool.length ) ];
+        } else if ( g.y >= 13 ) {
+          headTowardDoor( g, choices );
+        }
+      }
+    } else {
+      decideGhost( game, g );
+    }
+
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }
 
   const d = DIRS[ g.dir ];
   g.x += d.x * g.speed;
   g.y += d.y * g.speed;
+
+  if ( g.inPen && g.y < 12 ) {
+    g.inPen = false;
+  }
+
   wrapTunnel( g, width );
 }
 
@@ -164,10 +328,15 @@ function resetPositions( game ) {
   p.y = PACMAN_START.y;
   p.dir = 'left';
   p.nextDir = null;
+
+  const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
   game.ghosts.forEach( ( g, i ) => {
-    g.x = GHOST_STARTS[ i ].x;
-    g.y = GHOST_STARTS[ i ].y;
+    const start = GHOST_STARTS[ i ];
+    g.x = start.x;
+    g.y = start.y;
     g.dir = 'up';
+    g.inPen = true;
+    g.releaseDelay = start.kind === 'blinky' ? 0 : delays.pop();
   } );
 }
 
