@@ -13,7 +13,7 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
-const GHOST_RELEASE_INTERVAL = 90; // 1.5 s @ 60 fps
+const GHOST_RELEASE_INTERVAL = 180; // 3 s @ 60 fps
 const CLYDE_FLEE_DIST = 8;
 const PINKY_AHEAD = 4;
 const CLYDE_SCATTER = { x: 1, y: 29 };

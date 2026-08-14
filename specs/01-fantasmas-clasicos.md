@@ -19,7 +19,7 @@ El juego cuenta hoy con dos fantasmas (`hunter` y `random`) cuya única diferenc
 - `inky` calcula su target duplicando el vector de Blinky hacia Pac-Man: `target = pacman + 2·(pacman − blinky)`.
 - `clyde` persigue a Pac-Man si la distancia Manhattan supera `CLYDE_FLEE_DIST` (8); si no, huye a la esquina inferior-izquierda `(1, 29)`.
 - Todos spawnan dentro de la pen. Mientras están dentro y su timer no expiró, se mueven al azar (sin giro de 180°).
-- `blinky` sale de la pen en el frame inicial. Los otros tres salen en orden aleatorio, cada 1.5 s (90 frames @ 60 fps) tras el anterior.
+- `blinky` sale de la pen en el frame inicial. Los otros tres salen en orden aleatorio, cada 3 s (180 frames @ 60 fps) tras el anterior.
 - Al cruzar la celda de la puerta (`y === 12`, `x ∈ {13, 14}`), el fantasma fuerza `dir = 'up'`.
 - Cuando Pac-Man pierde una vida, los cuatro fantasmas vuelven a la pen y se recalculan los timers de release.
 
@@ -63,7 +63,7 @@ const GHOST_STARTS = [
 ### Constantes nuevas en `src/js/game.js`
 
 ```js
-const GHOST_RELEASE_INTERVAL = 90; // 1.5 s @ 60 fps
+const GHOST_RELEASE_INTERVAL = 180; // 3 s @ 60 fps
 const CLYDE_FLEE_DIST = 8;
 const PINKY_AHEAD = 4;
 const CLYDE_SCATTER = { x: 1, y: 29 };
@@ -77,7 +77,7 @@ const CLYDE_SCATTER = { x: 1, y: 29 };
 
 1. **Ampliar `GHOST_STARTS` en `src/js/maze.js`** con los cuatro fantasmas y su `color`. El HTML no necesita tocarse.
 2. **Eliminar `GHOST_COLORS` de `src/js/render.js`** y dibujar el color desde `g.color` en `drawGhost`. La lista de 4 colores ya estaba alineada con el orden nuevo.
-3. **Agregar en `createGame`** los campos `color`, `inPen`, `releaseDelay`. Inicializar: `blinky.releaseDelay = 0`; los otros tres con valores `90`, `180`, `270` asignados en orden aleatorio.
+3. **Agregar en `createGame`** los campos `color`, `inPen`, `releaseDelay`. Inicializar: `blinky.releaseDelay = 0`; los otros tres con valores `180`, `360`, `540` asignados en orden aleatorio.
 4. **Implementar `decideBlinky`** (target = pacman). Reemplaza al `hunter` actual.
 5. **Implementar `decidePinky`** (target = celda 4 adelante de Pac-Man en su `dir`, clamp a bordes).
 6. **Implementar `decideInky`** (target = `pacman + 2·(pacman − blinky)`, redondeado).
@@ -96,8 +96,8 @@ const CLYDE_SCATTER = { x: 1, y: 29 };
 - [ ] `GHOST_STARTS` tiene exactamente cuatro entradas con `kind ∈ {blinky, pinky, inky, clyde}`.
 - [ ] Al iniciar una partida, los cuatro fantasmas aparecen dentro de la pen.
 - [ ] `blinky` es visible fuera de la pen en el primer frame de juego.
-- [ ] El segundo fantasma en salir lo hace 1.5 s (±5 frames) después de `blinky`.
-- [ ] El tercer y cuarto fantasma salen en orden aleatorio, también separados 1.5 s.
+- [ ] El segundo fantasma en salir lo hace 3 s (±5 frames) después de `blinky`.
+- [ ] El tercer y cuarto fantasma salen en orden aleatorio, también separados 3 s.
 - [ ] Cada fantasma exhibe una ruta visiblemente distinta al perseguir a Pac-Man (no todos van en línea recta).
 - [ ] Cuando Pac-Man pierde una vida, los cuatro fantasmas regresan a sus posiciones iniciales en la pen y vuelve a verse el ciclo de release.
 - [ ] Mientras un fantasma está en la pen y su timer no expiró, no atraviesa la puerta.
