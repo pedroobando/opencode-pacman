@@ -148,6 +148,30 @@ function decideBlinky( game, g, choices ) {
   g.dir = best;
 }
 
+function decidePinky( game, g, choices ) {
+  const p = game.pacman;
+  const grid = game.grid;
+  const d = DIRS[ p.dir ] || { x: 0, y: 0 };
+  let tx = Math.round( p.x ) + d.x * PINKY_AHEAD;
+  let ty = Math.round( p.y ) + d.y * PINKY_AHEAD;
+  tx = Math.max( 0, Math.min( grid[ 0 ].length - 1, tx ) );
+  ty = Math.max( 0, Math.min( grid.length - 1, ty ) );
+
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const dd = DIRS[ dir ];
+    const nx = g.x + dd.x;
+    const ny = g.y + dd.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
 
@@ -159,6 +183,8 @@ function decideGhost( game, g ) {
 
   if ( g.kind === 'blinky' ) {
     decideBlinky( game, g, choices );
+  } else if ( g.kind === 'pinky' ) {
+    decidePinky( game, g, choices );
   } else {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
