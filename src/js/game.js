@@ -272,6 +272,7 @@ function decideGhost( game, g ) {
 function moveGhost( game, g ) {
   const grid = game.grid;
   const width = grid[ 0 ].length;
+  const wasInPen = g.inPen;
 
   // Fantasmas que aun esperan activacion se mantienen quietos.
   if ( g.inPen && g.idle ) {
@@ -323,6 +324,14 @@ function moveGhost( game, g ) {
 
   if ( g.inPen && g.y < 12 ) {
     g.inPen = false;
+  }
+
+  // Al salir de la pen, activar al siguiente fantasma en la secuencia.
+  if ( wasInPen && !g.inPen ) {
+    const next = game.ghosts.find( ( ghost ) => ghost.idle );
+    if ( next ) {
+      next.idle = false;
+    }
   }
 
   wrapTunnel( g, width );
