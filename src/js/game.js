@@ -317,10 +317,15 @@ function resetPositions( game ) {
   p.y = PACMAN_START.y;
   p.dir = 'left';
   p.nextDir = null;
+
+  const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
   game.ghosts.forEach( ( g, i ) => {
-    g.x = GHOST_STARTS[ i ].x;
-    g.y = GHOST_STARTS[ i ].y;
+    const start = GHOST_STARTS[ i ];
+    g.x = start.x;
+    g.y = start.y;
     g.dir = 'up';
+    g.inPen = true;
+    g.releaseDelay = start.kind === 'blinky' ? 0 : delays.pop();
   } );
 }
 
