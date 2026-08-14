@@ -272,6 +272,10 @@ function moveGhost( game, g ) {
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
+  if ( g.inPen && g.releaseDelay > 0 ) {
+    g.releaseDelay--;
+  }
+
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
     g.y = Math.round( g.y );
@@ -287,8 +291,15 @@ function moveGhost( game, g ) {
         const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
         if ( g.releaseDelay > 0 ) {
-          g.releaseDelay--;
-          g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+          // Mientras el timer no expire, no se permite cruzar la puerta.
+          const safeChoices = choices.filter( ( dir ) => {
+            const d = DIRS[ dir ];
+            const nx = Math.round( g.x + d.x );
+            const ny = Math.round( g.y + d.y );
+            return grid[ ny ][ nx ] !== 3;
+          } );
+          const pool = safeChoices.length ? safeChoices : choices;
+          g.dir = pool[ Math.floor( Math.random() * pool.length ) ];
         } else if ( g.y >= 13 ) {
           headTowardDoor( g, choices );
         }
