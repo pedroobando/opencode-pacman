@@ -69,12 +69,12 @@ const GHOST_RELEASE_INTERVAL = 180; // 3 s @ 60 fps
 ## Implementation plan
 
 1. **Actualizar `GHOST_STARTS` en `src/js/maze.js`** a las posiciones `y=14`, `x=11,12,13,14` manteniendo el orden Blinky, Pinky, Inky, Clyde.
-2. **Agregar el campo `idle` en `createGame`** (`src/js/game.js`): Pinky, Inky y Clyde inician con `idle: true`; Blinky inicia con `idle: false` para salir de inmediato. Blinky obtiene `releaseDelay = 0`; Pinky, Inky y Clyde obtienen `180`, `360` y `540` respectivamente (sin shuffle).
+2. **Agregar el campo `idle` en `createGame`** (`src/js/game.js`): Pinky, Inky y Clyde inician con `idle: true`; Blinky inicia con `idle: false` para salir de inmediato. Blinky obtiene `releaseDelay = 0`; Pinky, Inky y Clyde obtienen `180` cada uno, ya que el timer comienza a decrementar solo cuando el fantasma anterior sale.
 3. **Congelar fantasmas `idle` dentro de la pen**: en `moveGhost`, si `g.inPen && g.idle`, no decrementar `releaseDelay` ni mover el fantasma; solo retornar.
 4. **Movimiento aleatorio dentro de la pen para fantasmas activos**: cuando `g.inPen && !g.idle && g.releaseDelay > 0`, decrementar el timer y elegir dirección al azar entre las válidas, filtrando cualquier dirección que cruce una celda de puerta (`grid[ny][nx] === 3`).
 5. **Activar al siguiente fantasma al salir**: al inicio de `moveGhost` guardar `const wasInPen = g.inPen`; después de actualizar la posición, si `wasInPen && !g.inPen`, buscar el siguiente fantasma en `game.ghosts` (por orden de array) que aún tenga `idle: true` y cambiarlo a `false`.
 6. **Mantener la salida dirigida a la puerta**: cuando `g.inPen && !g.idle && g.releaseDelay <= 0 && g.y >= 13`, usar `headTowardDoor` para dirigirse a `(13, 12)`; al llegar a la celda de la puerta forzar `dir = 'up'`; al cruzar `y < 12` marcar `inPen = false`.
-7. **Actualizar `resetPositions`**: restablecer posiciones iniciales, `dir = 'up'`, `inPen = true` y recalcular `releaseDelay` en orden fijo (`0, 180, 360, 540`). Blinky vuelve a `idle = false`; los demás vuelven a `idle = true`.
+7. **Actualizar `resetPositions`**: restablecer posiciones iniciales, `dir = 'up'`, `inPen = true` y recalcular `releaseDelay` en orden fijo (`0, 180, 180, 180`). Blinky vuelve a `idle = false`; los demás vuelven a `idle = true`.
 8. **Probar manualmente**: abrir `src/index.html`, verificar la fila inicial, la quietud inicial, la salida secuencial y el reinicio tras perder una vida.
 
 ## Acceptance criteria

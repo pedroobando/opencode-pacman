@@ -50,7 +50,7 @@ function createGame() {
       speed: PACMAN_SPEED,
     },
     ghosts: ( () => {
-      const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ];
+      const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL ];
       return GHOST_STARTS.map( ( g, i ) => ( {
         x: g.x,
         y: g.y,
@@ -344,7 +344,7 @@ function resetPositions( game ) {
   p.dir = 'left';
   p.nextDir = null;
 
-  const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ];
+  const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL ];
   game.ghosts.forEach( ( g, i ) => {
     const start = GHOST_STARTS[ i ];
     g.x = start.x;
