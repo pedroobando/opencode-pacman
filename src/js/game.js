@@ -50,8 +50,8 @@ function createGame() {
       speed: PACMAN_SPEED,
     },
     ghosts: ( () => {
-      const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
-      return GHOST_STARTS.map( ( g ) => ( {
+      const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ];
+      return GHOST_STARTS.map( ( g, i ) => ( {
         x: g.x,
         y: g.y,
         dir: 'up',
@@ -59,7 +59,8 @@ function createGame() {
         kind: g.kind,
         color: g.color,
         inPen: true,
-        releaseDelay: g.kind === 'blinky' ? 0 : delays.pop(),
+        releaseDelay: delays[ i ],
+        idle: g.kind !== 'blinky',
       } ) );
     } )(),
   };
