@@ -50,8 +50,8 @@ function createGame() {
       speed: PACMAN_SPEED,
     },
     ghosts: ( () => {
-      const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
-      return GHOST_STARTS.map( ( g ) => ( {
+      const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL ];
+      return GHOST_STARTS.map( ( g, i ) => ( {
         x: g.x,
         y: g.y,
         dir: 'up',
@@ -59,7 +59,8 @@ function createGame() {
         kind: g.kind,
         color: g.color,
         inPen: true,
-        releaseDelay: g.kind === 'blinky' ? 0 : delays.pop(),
+        releaseDelay: delays[ i ],
+        idle: g.kind !== 'blinky',
       } ) );
     } )(),
   };
@@ -271,6 +272,12 @@ function decideGhost( game, g ) {
 function moveGhost( game, g ) {
   const grid = game.grid;
   const width = grid[ 0 ].length;
+  const wasInPen = g.inPen;
+
+  // Fantasmas que aun esperan activacion se mantienen quietos.
+  if ( g.inPen && g.idle ) {
+    return;
+  }
 
   if ( g.inPen && g.releaseDelay > 0 ) {
     g.releaseDelay--;
@@ -319,6 +326,14 @@ function moveGhost( game, g ) {
     g.inPen = false;
   }
 
+  // Al salir de la pen, activar al siguiente fantasma en la secuencia.
+  if ( wasInPen && !g.inPen ) {
+    const next = game.ghosts.find( ( ghost ) => ghost.idle );
+    if ( next ) {
+      next.idle = false;
+    }
+  }
+
   wrapTunnel( g, width );
 }
 
@@ -329,14 +344,15 @@ function resetPositions( game ) {
   p.dir = 'left';
   p.nextDir = null;
 
-  const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
+  const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL ];
   game.ghosts.forEach( ( g, i ) => {
     const start = GHOST_STARTS[ i ];
     g.x = start.x;
     g.y = start.y;
     g.dir = 'up';
     g.inPen = true;
-    g.releaseDelay = start.kind === 'blinky' ? 0 : delays.pop();
+    g.releaseDelay = delays[ i ];
+    g.idle = g.kind !== 'blinky';
   } );
 }
 
