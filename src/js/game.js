@@ -245,6 +245,8 @@ function headTowardDoor( g, choices ) {
 }
 
 function decideGhost( game, g ) {
+  if ( g.inPen ) return; // el modo pen se maneja directamente en moveGhost
+
   const grid = game.grid;
 
   const options = Object.keys( DIRS ).filter(
