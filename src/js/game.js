@@ -227,6 +227,23 @@ function decideClyde( game, g, choices ) {
   g.dir = best;
 }
 
+function headTowardDoor( g, choices ) {
+  const target = { x: 13, y: 12 };
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - target.x ) + Math.abs( ny - target.y );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
 
@@ -256,13 +273,39 @@ function moveGhost( game, g ) {
   if ( aligned( g.x ) && aligned( g.y ) ) {
     g.x = Math.round( g.x );
     g.y = Math.round( g.y );
-    decideGhost( game, g );
+
+    if ( g.inPen ) {
+      // En la celda de la puerta, forzar salida hacia arriba.
+      if ( g.y === 12 && g.x >= 13 && g.x <= 14 ) {
+        g.dir = 'up';
+      } else {
+        const options = Object.keys( DIRS ).filter(
+          ( dir ) => dir !== OPPOSITE[ g.dir ] && canMove( grid, g.x, g.y, dir, 'ghost' )
+        );
+        const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
+
+        if ( g.releaseDelay > 0 ) {
+          g.releaseDelay--;
+          g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+        } else if ( g.y >= 13 ) {
+          headTowardDoor( g, choices );
+        }
+      }
+    } else {
+      decideGhost( game, g );
+    }
+
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }
 
   const d = DIRS[ g.dir ];
   g.x += d.x * g.speed;
   g.y += d.y * g.speed;
+
+  if ( g.inPen && g.y < 12 ) {
+    g.inPen = false;
+  }
+
   wrapTunnel( g, width );
 }
 
