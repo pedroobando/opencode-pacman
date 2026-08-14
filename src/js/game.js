@@ -273,6 +273,11 @@ function moveGhost( game, g ) {
   const grid = game.grid;
   const width = grid[ 0 ].length;
 
+  // Fantasmas que aun esperan activacion se mantienen quietos.
+  if ( g.inPen && g.idle ) {
+    return;
+  }
+
   if ( g.inPen && g.releaseDelay > 0 ) {
     g.releaseDelay--;
   }
