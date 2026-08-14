@@ -13,6 +13,19 @@ const OPPOSITE = { left: 'right', right: 'left', up: 'down', down: 'up' };
 const PACMAN_SPEED = 0.125; // 1/8 celda/frame -> alinea cada 8 frames
 const GHOST_SPEED = 0.1;    // 1/10 celda/frame
 
+const GHOST_RELEASE_INTERVAL = 90; // 1.5 s @ 60 fps
+const CLYDE_FLEE_DIST = 8;
+const PINKY_AHEAD = 4;
+const CLYDE_SCATTER = { x: 1, y: 29 };
+
+function shuffle( arr ) {
+  for ( let i = arr.length - 1; i > 0; i-- ) {
+    const j = Math.floor( Math.random() * ( i + 1 ) );
+    [ arr[ i ], arr[ j ] ] = [ arr[ j ], arr[ i ] ];
+  }
+  return arr;
+}
+
 // Crea una partida nueva. Copia MAZE (pristino) a game.grid para poder comer
 // dots sin destruir el original, y reiniciar.
 function createGame() {
@@ -36,13 +49,19 @@ function createGame() {
       nextDir: null,
       speed: PACMAN_SPEED,
     },
-    ghosts: GHOST_STARTS.map( ( g ) => ( {
-      x: g.x,
-      y: g.y,
-      dir: 'up',
-      speed: GHOST_SPEED,
-      kind: g.kind,
-    } ) ),
+    ghosts: ( () => {
+      const delays = shuffle( [ GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL * 2, GHOST_RELEASE_INTERVAL * 3 ] );
+      return GHOST_STARTS.map( ( g ) => ( {
+        x: g.x,
+        y: g.y,
+        dir: 'up',
+        speed: GHOST_SPEED,
+        kind: g.kind,
+        color: g.color,
+        inPen: true,
+        releaseDelay: g.kind === 'blinky' ? 0 : delays.pop(),
+      } ) );
+    } )(),
   };
 }
 
