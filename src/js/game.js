@@ -197,6 +197,36 @@ function decideInky( game, g, choices ) {
   g.dir = best;
 }
 
+function decideClyde( game, g, choices ) {
+  const p = game.pacman;
+  const px = Math.round( p.x );
+  const py = Math.round( p.y );
+  const gx = Math.round( g.x );
+  const gy = Math.round( g.y );
+  let tx, ty;
+  if ( Math.abs( px - gx ) + Math.abs( py - gy ) > CLYDE_FLEE_DIST ) {
+    tx = px;
+    ty = py;
+  } else {
+    tx = CLYDE_SCATTER.x;
+    ty = CLYDE_SCATTER.y;
+  }
+
+  let best = choices[ 0 ];
+  let bestDist = Infinity;
+  for ( const dir of choices ) {
+    const d = DIRS[ dir ];
+    const nx = g.x + d.x;
+    const ny = g.y + d.y;
+    const dist = Math.abs( nx - tx ) + Math.abs( ny - ty );
+    if ( dist < bestDist ) {
+      bestDist = dist;
+      best = dir;
+    }
+  }
+  g.dir = best;
+}
+
 function decideGhost( game, g ) {
   const grid = game.grid;
 
@@ -212,6 +242,8 @@ function decideGhost( game, g ) {
     decidePinky( game, g, choices );
   } else if ( g.kind === 'inky' ) {
     decideInky( game, g, choices );
+  } else if ( g.kind === 'clyde' ) {
+    decideClyde( game, g, choices );
   } else {
     g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
   }
