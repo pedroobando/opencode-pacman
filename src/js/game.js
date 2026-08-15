@@ -271,7 +271,9 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'blinky' ) {
+  if ( game.powerMode > 0 ) {
+    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+  } else if ( g.kind === 'blinky' ) {
     decideBlinky( game, g, choices );
   } else if ( g.kind === 'pinky' ) {
     decidePinky( game, g, choices );
