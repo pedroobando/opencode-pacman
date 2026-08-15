@@ -333,9 +333,10 @@ function moveGhost( game, g ) {
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }
 
+  const speed = ( game.powerMode > 0 && !g.inPen ) ? FRIGHTENED_SPEED : g.speed;
   const d = DIRS[ g.dir ];
-  g.x += d.x * g.speed;
-  g.y += d.y * g.speed;
+  g.x += d.x * speed;
+  g.y += d.y * speed;
 
   if ( g.inPen && g.y < 12 ) {
     g.inPen = false;
