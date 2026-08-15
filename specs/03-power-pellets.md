@@ -13,7 +13,7 @@ SPEC 01 y SPEC 02 construyeron las personalidades de persecución y la secuencia
 
 **In:**
 
-- Añadir cuatro power pellets al mapa, uno en cada esquina clásica: `(1,3)`, `(26,3)`, `(1,23)`, `(26,23)`.
+- Añadir cuatro power pellets al mapa, uno en cada esquina: `(1,1)`, `(26,1)`, `(1,29)`, `(26,29)`.
 - Usar el carácter `o` en `MAZE_STR` y asignarle el valor de celda `4` en `parseTile`.
 - Pac-Man come un power pellet al pasar por su celda: suma 50 puntos, borra el pellet y activa el modo frightened.
 - El modo frightened dura exactamente `POWER_MODE_DURATION = 600` frames.
@@ -89,7 +89,7 @@ const FRIGHTENED_COLOR = "#2121ff";
 
 ## Acceptance criteria
 
-- [ ] `MAZE_STR` contiene exactamente cuatro caracteres `o` en las posiciones `(1,3)`, `(26,3)`, `(1,23)` y `(26,23)`.
+- [ ] `MAZE_STR` contiene exactamente cuatro caracteres `o` en las posiciones `(1,1)`, `(26,1)`, `(1,29)` y `(26,29)`.
 - [ ] `parseTile('o')` devuelve `4`.
 - [ ] Los cuatro power pellets se dibujan como círculos más grandes que los dots normales.
 - [ ] Comer un power pellet suma 50 puntos y desaparece el pellet.
