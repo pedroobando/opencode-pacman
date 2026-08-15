@@ -18,6 +18,12 @@ const CLYDE_FLEE_DIST = 8;
 const PINKY_AHEAD = 4;
 const CLYDE_SCATTER = { x: 1, y: 29 };
 
+const POWER_MODE_DURATION = 600; // 10 s @ 60 fps
+const FRIGHTENED_SPEED = GHOST_SPEED * 0.5;
+const GHOST_EATEN_SCORES = [ 200, 400, 800, 1600 ];
+const POWER_PELLET_POINTS = 50;
+const FRIGHTENED_COLOR = '#2121ff';
+
 function shuffle( arr ) {
   for ( let i = arr.length - 1; i > 0; i-- ) {
     const j = Math.floor( Math.random() * ( i + 1 ) );
@@ -41,6 +47,8 @@ function createGame() {
     score: 0,
     lives: 3,
     dotsRemaining: dots,
+    powerMode: 0,
+    ghostsEaten: 0,
     grid,
     pacman: {
       x: PACMAN_START.x,
@@ -119,6 +127,13 @@ function movePacman( game ) {
       grid[ p.y ][ p.x ] = 0;
       game.score += 10;
       game.dotsRemaining--;
+    }
+    // Comer power pellet.
+    if ( grid[ p.y ][ p.x ] === 4 ) {
+      grid[ p.y ][ p.x ] = 0;
+      game.score += POWER_PELLET_POINTS;
+      game.powerMode = POWER_MODE_DURATION;
+      game.ghostsEaten = 0;
     }
     // Si no puede seguir, se detiene en la celda.
     if ( !canMove( grid, p.x, p.y, p.dir, 'pacman' ) ) return;
@@ -256,7 +271,9 @@ function decideGhost( game, g ) {
   // Sin salida (callejon): permitir el giro de 180.
   const choices = options.length ? options : [ '' + OPPOSITE[ g.dir ] ];
 
-  if ( g.kind === 'blinky' ) {
+  if ( game.powerMode > 0 ) {
+    g.dir = choices[ Math.floor( Math.random() * choices.length ) ];
+  } else if ( g.kind === 'blinky' ) {
     decideBlinky( game, g, choices );
   } else if ( g.kind === 'pinky' ) {
     decidePinky( game, g, choices );
@@ -318,9 +335,10 @@ function moveGhost( game, g ) {
     if ( !canMove( grid, g.x, g.y, g.dir, 'ghost' ) ) return;
   }
 
+  const speed = ( game.powerMode > 0 && !g.inPen ) ? FRIGHTENED_SPEED : g.speed;
   const d = DIRS[ g.dir ];
-  g.x += d.x * g.speed;
-  g.y += d.y * g.speed;
+  g.x += d.x * speed;
+  g.y += d.y * speed;
 
   if ( g.inPen && g.y < 12 ) {
     g.inPen = false;
@@ -344,6 +362,9 @@ function resetPositions( game ) {
   p.dir = 'left';
   p.nextDir = null;
 
+  game.powerMode = 0;
+  game.ghostsEaten = 0;
+
   const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL ];
   game.ghosts.forEach( ( g, i ) => {
     const start = GHOST_STARTS[ i ];
@@ -356,22 +377,59 @@ function resetPositions( game ) {
   } );
 }
 
+function respawnGhost( game, g ) {
+  const order = [ 'blinky', 'pinky', 'inky', 'clyde' ];
+  const idx = order.indexOf( g.kind );
+  const start = GHOST_STARTS.find( ( s ) => s.kind === g.kind );
+  g.x = start.x;
+  g.y = start.y;
+  g.dir = 'up';
+  g.inPen = true;
+
+  if ( idx === 0 ) {
+    g.idle = false;
+    g.releaseDelay = 0;
+    return;
+  }
+
+  const prevKind = order[ idx - 1 ];
+  const prev = game.ghosts.find( ( ghost ) => ghost.kind === prevKind );
+  if ( prev && !prev.inPen ) {
+    g.idle = false;
+    g.releaseDelay = 0;
+  } else {
+    g.idle = true;
+    g.releaseDelay = GHOST_RELEASE_INTERVAL;
+  }
+}
+
 function collides( a, b ) {
   return Math.abs( a.x - b.x ) < 0.5 && Math.abs( a.y - b.y ) < 0.5;
 }
 
 function update( game ) {
+  if ( game.powerMode > 0 ) {
+    game.powerMode--;
+  }
+
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
   for ( const g of game.ghosts ) {
     if ( collides( game.pacman, g ) ) {
-      game.lives--;
-      if ( game.lives <= 0 ) {
-        game.state = 'lost';
-        return;
+      if ( game.powerMode > 0 ) {
+        const idx = Math.min( game.ghostsEaten, GHOST_EATEN_SCORES.length - 1 );
+        game.score += GHOST_EATEN_SCORES[ idx ];
+        game.ghostsEaten++;
+        respawnGhost( game, g );
+      } else {
+        game.lives--;
+        if ( game.lives <= 0 ) {
+          game.state = 'lost';
+          return;
+        }
+        resetPositions( game );
       }
-      resetPositions( game );
       break;
     }
   }
@@ -382,3 +440,4 @@ function update( game ) {
 window.createGame = createGame;
 window.update = update;
 window.DIRS = DIRS;
+window.FRIGHTENED_COLOR = FRIGHTENED_COLOR;
