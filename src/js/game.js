@@ -374,22 +374,59 @@ function resetPositions( game ) {
   } );
 }
 
+function respawnGhost( game, g ) {
+  const order = [ 'blinky', 'pinky', 'inky', 'clyde' ];
+  const idx = order.indexOf( g.kind );
+  const start = GHOST_STARTS.find( ( s ) => s.kind === g.kind );
+  g.x = start.x;
+  g.y = start.y;
+  g.dir = 'up';
+  g.inPen = true;
+
+  if ( idx === 0 ) {
+    g.idle = false;
+    g.releaseDelay = 0;
+    return;
+  }
+
+  const prevKind = order[ idx - 1 ];
+  const prev = game.ghosts.find( ( ghost ) => ghost.kind === prevKind );
+  if ( prev && !prev.inPen ) {
+    g.idle = false;
+    g.releaseDelay = 0;
+  } else {
+    g.idle = true;
+    g.releaseDelay = GHOST_RELEASE_INTERVAL;
+  }
+}
+
 function collides( a, b ) {
   return Math.abs( a.x - b.x ) < 0.5 && Math.abs( a.y - b.y ) < 0.5;
 }
 
 function update( game ) {
+  if ( game.powerMode > 0 ) {
+    game.powerMode--;
+  }
+
   movePacman( game );
   game.ghosts.forEach( ( g ) => moveGhost( game, g ) );
 
   for ( const g of game.ghosts ) {
     if ( collides( game.pacman, g ) ) {
-      game.lives--;
-      if ( game.lives <= 0 ) {
-        game.state = 'lost';
-        return;
+      if ( game.powerMode > 0 ) {
+        const idx = Math.min( game.ghostsEaten, GHOST_EATEN_SCORES.length - 1 );
+        game.score += GHOST_EATEN_SCORES[ idx ];
+        game.ghostsEaten++;
+        respawnGhost( game, g );
+      } else {
+        game.lives--;
+        if ( game.lives <= 0 ) {
+          game.state = 'lost';
+          return;
+        }
+        resetPositions( game );
       }
-      resetPositions( game );
       break;
     }
   }
