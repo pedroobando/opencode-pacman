@@ -362,6 +362,9 @@ function resetPositions( game ) {
   p.dir = 'left';
   p.nextDir = null;
 
+  game.powerMode = 0;
+  game.ghostsEaten = 0;
+
   const delays = [ 0, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL, GHOST_RELEASE_INTERVAL ];
   game.ghosts.forEach( ( g, i ) => {
     const start = GHOST_STARTS[ i ];
