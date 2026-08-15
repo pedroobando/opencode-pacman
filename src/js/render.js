@@ -111,7 +111,7 @@ function drawPacman( ctx, p, frame ) {
   ctx.fill();
 }
 
-function drawGhost( ctx, g ) {
+function drawGhost( ctx, g, game ) {
   const { cx, cy } = cellCenter( g.x, g.y );
   const r = TILE / 2 - 1;
   const top = cy - r;
@@ -119,7 +119,8 @@ function drawGhost( ctx, g ) {
   const left = cx - r;
   const right = cx + r;
 
-  ctx.fillStyle = g.color;
+  const frightened = game && game.powerMode > 0 && !g.inPen;
+  ctx.fillStyle = frightened ? FRIGHTENED_COLOR : g.color;
   ctx.beginPath();
   ctx.arc( cx, cy - 1, r, Math.PI, 0, false ); // cabeza
   ctx.lineTo( right, bottom );
