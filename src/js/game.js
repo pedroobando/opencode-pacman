@@ -18,6 +18,12 @@ const CLYDE_FLEE_DIST = 8;
 const PINKY_AHEAD = 4;
 const CLYDE_SCATTER = { x: 1, y: 29 };
 
+const POWER_MODE_DURATION = 600; // 10 s @ 60 fps
+const FRIGHTENED_SPEED = GHOST_SPEED * 0.5;
+const GHOST_EATEN_SCORES = [ 200, 400, 800, 1600 ];
+const POWER_PELLET_POINTS = 50;
+const FRIGHTENED_COLOR = '#2121ff';
+
 function shuffle( arr ) {
   for ( let i = arr.length - 1; i > 0; i-- ) {
     const j = Math.floor( Math.random() * ( i + 1 ) );
@@ -41,6 +47,8 @@ function createGame() {
     score: 0,
     lives: 3,
     dotsRemaining: dots,
+    powerMode: 0,
+    ghostsEaten: 0,
     grid,
     pacman: {
       x: PACMAN_START.x,
